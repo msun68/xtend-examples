@@ -1,0 +1,4 @@
+.DS_Store
+bin
+*.java._trace
+*.xtendbin
