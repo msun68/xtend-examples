@@ -2,32 +2,48 @@ package sorting
 
 import java.util.Collections
 import java.util.List
+import org.eclipse.xtend.lib.annotations.Data
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.*
 
 class TopologicalSort {
 
-	@Test def void test() {
+	@Test
+	def void example1() {
 		val tasks = #[
 			"A" -> #["B"],
 			"B" -> #["C"],
 			"C" -> #[]
 		]
-		assertEquals(#["C", "B", "A"], sort(tasks, #[]).map[key])
+
+		assertEquals(#["C", "B", "A"], tasks.sort)
 	}
 
-	def List<Pair<String, List<String>>> sort(List<Pair<String, List<String>>> tasks,
-		List<Pair<String, List<String>>> sorted) {
-		if (!tasks.empty) {
-			val names = tasks.map[key]
-			val canRun = tasks.filter [ task |
-				Collections.disjoint(task.value, names)
-			].toList
-			if (canRun.empty) {
-				throw new Exception
+	@Test
+	def void example2() {
+		val tasks = #[new Task("A"), new Task("B"), new Task("C")]
+		val dependencies = #[new Dependency("A", "B"), new Dependency("B", "C")]
+
+		assertEquals(#["C", "B", "A"], tasks.join(dependencies).sort)
+	}
+
+	def List<Pair<String, List<String>>> join(List<Task> tasks, List<Dependency> dependencies) {
+		tasks.map[t|t.name -> dependencies.filter[d|d.task == t.name].map[dependency].toList]
+	}
+
+	def List<String> sort(List<Pair<String, List<String>>> tasks) {
+		sort(tasks, #[])
+	}
+
+	def List<String> sort(List<Pair<String, List<String>>> list, List<String> sorted) {
+		if (!list.empty) {
+			val keys = list.map[key]
+			val nodeps = list.filter[Collections.disjoint(value, keys)].toList
+			if (nodeps.empty) {
+				throw new IllegalArgumentException
 			}
-			return sort(tasks - canRun, sorted + canRun)
+			return sort(list - nodeps, sorted + nodeps.map[key])
 		}
 		sorted
 	}
@@ -38,6 +54,17 @@ class TopologicalSort {
 
 	def <T> List<T> operator_minus(List<T> a, List<T> b) {
 		a.filter[!b.contains(it)].toList
+	}
+
+	@Data
+	static class Task {
+		String name
+	}
+
+	@Data
+	static class Dependency {
+		String task
+		String dependency
 	}
 
 }
