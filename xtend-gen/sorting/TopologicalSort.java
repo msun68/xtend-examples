@@ -16,6 +16,7 @@ import org.eclipse.xtext.xbase.lib.Pure;
 import org.eclipse.xtext.xbase.lib.util.ToStringBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 @SuppressWarnings("all")
 public class TopologicalSort {
@@ -149,6 +150,18 @@ public class TopologicalSort {
     TopologicalSort.Dependency _dependency_1 = new TopologicalSort.Dependency("B", "C");
     final List<TopologicalSort.Dependency> dependencies = Collections.<TopologicalSort.Dependency>unmodifiableList(CollectionLiterals.<TopologicalSort.Dependency>newArrayList(_dependency, _dependency_1));
     Assertions.assertEquals(Collections.<String>unmodifiableList(CollectionLiterals.<String>newArrayList("C", "B", "A")), this.sort(this.join(tasks, dependencies)));
+  }
+  
+  @Test
+  public void testCircularDependency() {
+    Pair<String, List<String>> _mappedTo = Pair.<String, List<String>>of("A", Collections.<String>unmodifiableList(CollectionLiterals.<String>newArrayList("B")));
+    Pair<String, List<String>> _mappedTo_1 = Pair.<String, List<String>>of("B", Collections.<String>unmodifiableList(CollectionLiterals.<String>newArrayList("C")));
+    Pair<String, List<String>> _mappedTo_2 = Pair.<String, List<String>>of("C", Collections.<String>unmodifiableList(CollectionLiterals.<String>newArrayList("A")));
+    final List<Pair<String, List<String>>> tasks = Collections.<Pair<String, List<String>>>unmodifiableList(CollectionLiterals.<Pair<String, List<String>>>newArrayList(_mappedTo, _mappedTo_1, _mappedTo_2));
+    final Executable _function = () -> {
+      this.sort(tasks);
+    };
+    Assertions.<IllegalArgumentException>assertThrows(IllegalArgumentException.class, _function);
   }
   
   public List<Pair<String, List<String>>> join(final List<TopologicalSort.Task> tasks, final List<TopologicalSort.Dependency> dependencies) {

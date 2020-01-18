@@ -28,6 +28,17 @@ class TopologicalSort {
 		assertEquals(#["C", "B", "A"], tasks.join(dependencies).sort)
 	}
 
+	@Test
+	def void testCircularDependency() {
+		val tasks = #[
+			"A" -> #["B"],
+			"B" -> #["C"],
+			"C" -> #["A"]
+		]
+
+		assertThrows(IllegalArgumentException, [tasks.sort])
+	}
+
 	def List<Pair<String, List<String>>> join(List<Task> tasks, List<Dependency> dependencies) {
 		tasks.map[t|t.name -> dependencies.filter[d|d.task == t.name].map[dependency].toList]
 	}
