@@ -1,8 +1,8 @@
 package sat4j;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.xtext.xbase.lib.CollectionLiterals;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.Pair;
@@ -14,7 +14,7 @@ import org.sat4j.specs.ISolver;
 
 @SuppressWarnings("all")
 public class Classification {
-  private final List<Pair<Integer, String>> categories = Collections.<Pair<Integer, String>>unmodifiableList(CollectionLiterals.<Pair<Integer, String>>newArrayList(Pair.<Integer, String>of(Integer.valueOf(1), "A"), Pair.<Integer, String>of(Integer.valueOf(2), "B")));
+  private final Map<String, Integer> categories = Collections.<String, Integer>unmodifiableMap(CollectionLiterals.<String, Integer>newHashMap(Pair.<String, Integer>of("A", Integer.valueOf(1)), Pair.<String, Integer>of("B", Integer.valueOf(2))));
   
   private final Map<String, Integer> domains = Collections.<String, Integer>unmodifiableMap(CollectionLiterals.<String, Integer>newHashMap(Pair.<String, Integer>of("A", Integer.valueOf(3)), Pair.<String, Integer>of("B", Integer.valueOf(4))));
   
@@ -31,8 +31,8 @@ public class Classification {
    *   4: email is from domain B
    * 
    * Clauses:
-   *   1 -> 3 = !1 | 3
-   *   2 -> 4 = !2 | 4
+   *   1 -> 3 = !1 | 3 = [-1, 3]
+   *   2 -> 4 = !2 | 4 = [-2, 4]
    */
   @Test
   public void example() {
@@ -44,28 +44,39 @@ public class Classification {
       solver.addClause(_vecInt_1);
       VecInt _vecInt_2 = new VecInt(new int[] { 1, 3 });
       Assertions.assertTrue(solver.isSatisfiable(_vecInt_2));
+      Assertions.assertArrayEquals(new int[] { 1, (-2), 3, (-4) }, solver.model());
       VecInt _vecInt_3 = new VecInt(new int[] { 1, (-3) });
       Assertions.assertFalse(solver.isSatisfiable(_vecInt_3));
       VecInt _vecInt_4 = new VecInt(new int[] { 2, 3 });
       Assertions.assertTrue(solver.isSatisfiable(_vecInt_4));
+      Assertions.assertArrayEquals(new int[] { (-1), 2, 3, 4 }, solver.model());
       VecInt _vecInt_5 = new VecInt(new int[] { 2, (-3) });
       Assertions.assertTrue(solver.isSatisfiable(_vecInt_5));
+      Assertions.assertArrayEquals(new int[] { (-1), 2, (-3), 4 }, solver.model());
       Assertions.assertEquals("A", this.eval(solver, "A"));
       Assertions.assertEquals("B", this.eval(solver, "B"));
       Assertions.assertNull(this.eval(solver, "C"));
+      VecInt _vecInt_6 = new VecInt(new int[] { 1 });
+      Assertions.assertTrue(solver.isSatisfiable(_vecInt_6));
+      Assertions.assertArrayEquals(new int[] { 1, (-2), 3, (-4) }, solver.model());
+      VecInt _vecInt_7 = new VecInt(new int[] { 2 });
+      Assertions.assertTrue(solver.isSatisfiable(_vecInt_7));
+      Assertions.assertArrayEquals(new int[] { (-1), 2, (-3), 4 }, solver.model());
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }
   }
   
-  public String eval(final ISolver solver, final String emailFromDomain) {
+  public String eval(final ISolver solver, final String domain) {
     try {
-      for (final Pair<Integer, String> category : this.categories) {
-        {
-          final Integer from = this.domains.get(emailFromDomain);
-          if ((((from != null) && solver.isSatisfiable(new VecInt(new int[] { (category.getKey()).intValue(), (from).intValue() }))) && 
-            (!solver.isSatisfiable(new VecInt(new int[] { (category.getKey()).intValue(), (-(from).intValue()) }))))) {
-            return category.getValue();
+      Set<Map.Entry<String, Integer>> _entrySet = this.categories.entrySet();
+      for (final Map.Entry<String, Integer> category : _entrySet) {
+        boolean _containsKey = this.domains.containsKey(domain);
+        if (_containsKey) {
+          final Integer lit = this.domains.get(domain);
+          if ((solver.isSatisfiable(new VecInt(new int[] { (category.getValue()).intValue(), (lit).intValue() })) && 
+            (!solver.isSatisfiable(new VecInt(new int[] { (category.getValue()).intValue(), (-(lit).intValue()) }))))) {
+            return category.getKey();
           }
         }
       }
