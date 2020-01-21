@@ -69,18 +69,19 @@ public class Classification {
   
   public String eval(final ISolver solver, final String domain) {
     try {
-      Set<Map.Entry<String, Integer>> _entrySet = this.categories.entrySet();
-      for (final Map.Entry<String, Integer> category : _entrySet) {
-        boolean _containsKey = this.domains.containsKey(domain);
-        if (_containsKey) {
-          final Integer lit = this.domains.get(domain);
-          if ((solver.isSatisfiable(new VecInt(new int[] { (category.getValue()).intValue(), (lit).intValue() })) && 
-            (!solver.isSatisfiable(new VecInt(new int[] { (category.getValue()).intValue(), (-(lit).intValue()) }))))) {
+      Object _xifexpression = null;
+      boolean _containsKey = this.domains.containsKey(domain);
+      if (_containsKey) {
+        final Integer d = this.domains.get(domain);
+        Set<Map.Entry<String, Integer>> _entrySet = this.categories.entrySet();
+        for (final Map.Entry<String, Integer> category : _entrySet) {
+          if ((solver.isSatisfiable(new VecInt(new int[] { (category.getValue()).intValue(), (d).intValue() })) && 
+            (!solver.isSatisfiable(new VecInt(new int[] { (category.getValue()).intValue(), (-(d).intValue()) }))))) {
             return category.getKey();
           }
         }
       }
-      return null;
+      return ((String)_xifexpression);
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }

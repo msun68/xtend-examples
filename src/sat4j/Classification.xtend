@@ -35,38 +35,45 @@ class Classification {
 		solver.addClause(new VecInt(#[-1, 3]))
 		solver.addClause(new VecInt(#[-2, 4]))
 
-		// it is satisfiable when "email is category A" and "email from domain A"
+		// it should be satisfiable when "email is category A" and "email from domain A"
 		assertTrue(solver.isSatisfiable(new VecInt(#[1, 3])))
 		assertArrayEquals(#[1, -2, 3, -4], solver.model)
 
-		// it is not satisfiable when "email is category A" and "email is not from domain A"
+		// it should not be satisfiable when "email is category A" and "email is not from domain A"
 		assertFalse(solver.isSatisfiable(new VecInt(#[1, -3])))
 
-		// it is satisfiable when "email is category B" and "email from domain A"
+		// it should be satisfiable when "email is category B" and "email from domain A"
 		assertTrue(solver.isSatisfiable(new VecInt(#[2, 3])))
 		assertArrayEquals(#[-1, 2, 3, 4], solver.model)
 
-		// it is satisfiable when "email is category B" and "email is not from domain A"
+		// it should be satisfiable when "email is category B" and "email is not from domain A"
 		assertTrue(solver.isSatisfiable(new VecInt(#[2, -3])))
 		assertArrayEquals(#[-1, 2, -3, 4], solver.model)
 
+		// when email is from domain A, it should be classified as category A
 		assertEquals("A", solver.eval("A"))
+
+		// When email is from domain B, it should be classified as category B
 		assertEquals("B", solver.eval("B"))
+
+		// When email is from domain C (undefined), it should return null (can not be classified)
 		assertNull(solver.eval("C"))
-		
+
+		// it should return a solution for "email is category A"
 		assertTrue(solver.isSatisfiable(new VecInt(#[1])))
 		assertArrayEquals(#[1, -2, 3, -4], solver.model)
 
+		// it should return a solution for "email is category B"
 		assertTrue(solver.isSatisfiable(new VecInt(#[2])))
 		assertArrayEquals(#[-1, 2, -3, 4], solver.model)
 	}
 
 	def String eval(ISolver solver, String domain) {
-		for (category : categories.entrySet) {
-			if (domains.containsKey(domain)) {
-				val lit = domains.get(domain)
-				if (solver.isSatisfiable(new VecInt(#[category.value, lit])) &&
-					!solver.isSatisfiable(new VecInt(#[category.value, -lit]))) {
+		if (domains.containsKey(domain)) {
+			val d = domains.get(domain)
+			for (category : categories.entrySet) {
+				if (solver.isSatisfiable(new VecInt(#[category.value, d])) &&
+					!solver.isSatisfiable(new VecInt(#[category.value, -d]))) {
 					return category.key
 				}
 			}
